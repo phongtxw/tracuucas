@@ -1,5 +1,6 @@
 // app/api/auth/[...nextauth]/route.js
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store"; 
 
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
@@ -45,12 +46,27 @@ const handler = NextAuth({
           const docId = "GJogwB9z5fp3Vu26mPDX";
           const docRef = doc(db, "users", docId);
 
-          const snap = await Promise.race([
-            getDoc(docRef),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Timeout")), 5000)
-            ),
-          ]);
+          let snap;
+          try {
+            snap = await getDoc(docRef);
+          } catch (err) {
+            console.error("Firebase getDoc ERROR:");
+            console.error("Message:", err.message);
+            console.error("Code:", err.code);
+            console.error("Full error:", err);
+
+            return NextResponse.json(
+              { error: "Firebase getDoc failed", details: err.message },
+              { status: 500 }
+            );
+          }
+
+          // const snap = await Promise.race([
+          //   getDoc(docRef),
+          //   new Promise((_, reject) =>
+          //     setTimeout(() => reject(new Error("Timeout")), 5000)
+          //   ),
+          // ]);
 
           if (!snap.exists()) {
             token.isAllowed = false;

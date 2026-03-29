@@ -1,3 +1,5 @@
+// app/api/get-emails/route.js
+
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";

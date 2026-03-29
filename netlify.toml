@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Tắt mọi xử lý tự động của Netlify (rất quan trọng khi publish = .next)
+[build.processing]
+  skip_processing = true
+
+# Fix cache cho static files
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

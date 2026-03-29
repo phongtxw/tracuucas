@@ -1,4 +1,5 @@
 // app/api/auth/[...nextauth]/route.js
+export const dynamic = "force-dynamic";
 
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
@@ -12,7 +13,6 @@ const handler = NextAuth({
   trustHost: true,
 
   secret: process.env.NEXTAUTH_SECRET,
-  baseUrl: process.env.NEXTAUTH_URL,
 
   session: {
     strategy: "jwt", 
@@ -32,24 +32,24 @@ const handler = NextAuth({
 
   callbacks: {
     async signIn({ user }) {
+      try {
+        console.log("User email:", user.email);
 
-      console.log("User email:", user.email);
+        const docId = "GJogwB9z5fp3Vu26mPDX";
+        const docRef = doc(db, "users", docId);
 
-      const docId = "GJogwB9z5fp3Vu26mPDX";
-      
-      const docRef = doc(db, "users", docId);
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) return false;
 
-      const snap = await getDoc(docRef);
-      if (!snap.exists()) return;
-      const data = snap.data();
-      const emails = Array.isArray(data.emails) ? data.emails : [];
+        const data = snap.data();
+        const emails = Array.isArray(data.emails) ? data.emails : [];
 
-      if (!emails.includes(user.email)) {
+        return emails.includes(user.email);
+      } catch (err) {
+        console.error("SIGNIN ERROR:", err);
         return false;
-      } 
-
-      return true;
-    },
+      }
+    }
 
   
   },

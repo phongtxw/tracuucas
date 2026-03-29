@@ -1,6 +1,5 @@
 // app/api/auth/[...nextauth]/route.js
 export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store"; 
 
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
@@ -10,12 +9,13 @@ import { doc, getDoc } from "firebase/firestore";
 
 const handler = NextAuth({
   debug: true,
+
   trustHost: true,
 
   secret: process.env.NEXTAUTH_SECRET,
 
   session: {
-    strategy: "jwt",
+    strategy: "jwt", 
   },
 
   pages: {
@@ -31,66 +31,52 @@ const handler = NextAuth({
   ],
 
   callbacks: {
-    // B1: luôn cho login để tránh crash OAuth
-    async signIn() {
-      return true;
-    },
+    async signIn({ user }) {
+      try {
+        console.log("User email:", user.email);
 
-    //  B2: check Firestore ở đây (an toàn hơn)
-    async jwt({ token, user }) {
-      // chỉ chạy khi user vừa login
-      if (user) {
+        const docId = "GJogwB9z5fp3Vu26mPDX";
+        const docRef = doc(db, "users", docId);
+
+        // const snap = await getDoc(docRef);
+        // const snap = await Promise.race([
+        //   getDoc(docRef),
+        //   new Promise((_, reject) =>
+        //     setTimeout(() => reject(new Error("Timeout")), 5000)
+        //   ),
+        // ]);
+
+        let snap;
         try {
-          console.log("JWT check email:", user.email);
-
-          const docId = "GJogwB9z5fp3Vu26mPDX";
-          const docRef = doc(db, "users", docId);
-
-          let snap;
-          try {
-            snap = await getDoc(docRef);
-          } catch (err) {
-            console.error("Firebase getDoc ERROR:");
-            console.error("Message:", err.message);
-            console.error("Code:", err.code);
-            console.error("Full error:", err);
-
-            return NextResponse.json(
-              { error: "Firebase getDoc failed", details: err.message },
-              { status: 500 }
-            );
-          }
-
-          // const snap = await Promise.race([
-          //   getDoc(docRef),
-          //   new Promise((_, reject) =>
-          //     setTimeout(() => reject(new Error("Timeout")), 5000)
-          //   ),
-          // ]);
-
-          if (!snap.exists()) {
-            token.isAllowed = false;
-          } else {
-            const data = snap.data();
-            const emails = Array.isArray(data.emails) ? data.emails : [];
-
-            token.isAllowed = emails.includes(user.email);
-          }
+          snap = await getDoc(docRef);
         } catch (err) {
-          console.error("JWT ERROR:", err);
-          token.isAllowed = false;
+          console.error("Firebase getDoc ERROR:");
+          console.error("Message:", err.message);
+          console.error("Code:", err.code);
+          console.error("Full error:", err);
+
+          return NextResponse.json(
+            { error: "Firebase getDoc failed", details: err.message },
+            { status: 500 }
+          );
         }
+
+        if (!snap.exists()) return false;
+
+        const data = snap.data();
+        const emails = Array.isArray(data.emails) ? data.emails : [];
+
+        return emails.includes(user.email);
+      } catch (err) {
+        console.error("SIGNIN ERROR:", err);
+        return false;
       }
+    }
 
-      return token;
-    },
-
-    //  B3: đưa dữ liệu ra client
-    async session({ session, token }) {
-      session.isAllowed = token.isAllowed;
-      return session;
-    },
+  
   },
+
 });
+
 
 export { handler as GET, handler as POST };

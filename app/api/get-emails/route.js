@@ -11,8 +11,21 @@ export async function GET() {
     const docId = "GJogwB9z5fp3Vu26mPDX";
 
     const docRef = doc(db, "users", docId);
-    const snap = await getDoc(docRef);
 
+    let snap;
+    try {
+      snap = await getDoc(docRef);
+    } catch (err) {
+      console.error("Firebase getDoc ERROR:");
+      console.error("Message:", err.message);
+      console.error("Code:", err.code);
+      console.error("Full error:", err);
+
+      return NextResponse.json(
+        { error: "Firebase getDoc failed", details: err.message },
+        { status: 500 }
+      );
+    }
     if (!snap.exists()) {
       return NextResponse.json({ emails: [] });
     }

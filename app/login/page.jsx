@@ -1,8 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
+
+  useEffect(() => {
+    localStorage.removeItem("token");
+  }, []);
+
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 px-4">
       <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-md text-center">

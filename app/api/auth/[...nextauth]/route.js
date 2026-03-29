@@ -61,10 +61,13 @@ const handler = NextAuth({
           );
         }
 
+        console.log("Firestore document fetched successfully");
         if (!snap.exists()) return false;
+        console.log("Document data:", snap.data());
 
         const data = snap.data();
         const emails = Array.isArray(data.emails) ? data.emails : [];
+        console.log("Allowed emails:", emails);
 
         return emails.includes(user.email);
       } catch (err) {

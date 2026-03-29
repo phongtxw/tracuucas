@@ -12,7 +12,7 @@ const handler = NextAuth({
   trustHost: true,
 
   secret: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  baseUrl: process.env.NEXTAUTH_URL,
 
   session: {
     strategy: "jwt", 
@@ -32,6 +32,8 @@ const handler = NextAuth({
 
   callbacks: {
     async signIn({ user }) {
+
+      console.log("User email:", user.email);
 
       const docId = "GJogwB9z5fp3Vu26mPDX";
       
